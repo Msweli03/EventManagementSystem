@@ -1,0 +1,60 @@
+﻿@page "/events/{eventId:int}"
+@using EventManagementSystem.Data;
+@using EventManagementSystem.Model;
+@using Microsoft.EntityFrameworkCore;
+using EventM
+@inject ApplicationDbContext _context
+@inject NavigationManager NavigationManager
+
+<h3>@eventItem.Name</h3>
+<p>@eventItem.Date.ToShortDateString()</p>
+<p>Seats Available: @eventItem.AvailableSeats</p>
+
+@if (eventItem.AvailableSeats > 0 && !isRegistered)
+{
+    <button class="btn btn-primary" @onclick="Register">Register</button>
+}
+else if (isRegistered)
+{
+    <p>You have already registered for this event.</p>
+}
+else
+{
+    <p>No seats available.</p>
+}
+
+@code {
+    [Parameter] public int eventId { get; set; }
+    private Event eventItem;
+    private bool isRegistered = false;
+    private string userId = "User1";  // Replace with actual user ID logic
+
+    protected override async Task OnInitializedAsync()
+    {
+        eventItem = await _context.Events.Include(e => e.Registrations)
+                            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        isRegistered = await _context.Registrations.AnyAsync(r => r.EventId == eventId && r.UserId == userId);
+    }
+
+    private async Task Register()
+    {
+        if (eventItem.AvailableSeats > 0)
+        {
+            var registration = new Registration
+                {
+                    EventId = eventItem.Id,
+                    UserId = userId,
+                    RegistrationDate = DateTime.Now,
+                    ReferenceNumber = Guid.NewGuid().ToString()
+                };
+
+            _context.Registrations.Add(registration);
+            eventItem.AvailableSeats--;
+            await _context.SaveChangesAsync();
+
+            isRegistered = true;
+            NavigationManager.NavigateTo($"/events/{eventItem.Id}");
+        }
+    }
+}

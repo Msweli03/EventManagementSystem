@@ -1,0 +1,66 @@
+﻿@page "/events/edit/{eventId:int?}"
+@using EventManagementSystem.Data;
+@using EventManagementSystem.Model;
+@using Microsoft.EntityFrameworkCore;
+@inject ApplicationDbContext _context
+@inject NavigationManager NavigationManager
+
+<h3>Edit Event</h3>
+
+<EditForm Model="@eventItem" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="name">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="eventItem.Name" />
+    </div>
+    <div class="form-group">
+        <label for="date">Date</label>
+        <InputDate id="date" class="form-control" @bind-Value="eventItem.Date" />
+    </div>
+    <div class="form-group">
+        <label for="totalSeats">Total Seats</label>
+        <InputNumber id="totalSeats" class="form-control" @bind-Value="eventItem.TotalSeats" />
+    </div>
+    <div class="form-group">
+        <label for="availableSeats">Available Seats</label>
+        <InputNumber id="availableSeats" class="form-control" @bind-Value="eventItem.AvailableSeats" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? eventId { get; set; }
+    private Event eventItem = new Event();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (eventId.HasValue)
+        {
+            eventItem = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId.Value);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (eventId.HasValue)
+        {
+            _context.Events.Update(eventItem);
+        }
+        else
+        {
+            _context.Events.Add(eventItem);
+        }
+
+        await _context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/events");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/events");
+    }
+}

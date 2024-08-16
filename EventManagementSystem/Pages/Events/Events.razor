@@ -1,0 +1,39 @@
+﻿@page "/events"
+@using EventManagementSystem.Data;
+@using EventManagementSystem.Model;
+@using Microsoft.EntityFrameworkCore;
+@inject ApplicationDbContext _context
+
+<h3>Available Events</h3>
+
+@if (events == null)
+{
+    <p>Loading...</p>
+}
+else if (!events.Any())
+{
+    <p>No events available.</p>
+}
+else
+{
+
+    <ul>
+        @foreach (var eventItem in events)
+        {
+            <li>
+                <a href="/events/@eventItem.Id">@eventItem.Name</a>
+                (Available Seats: @eventItem.AvailableSeats)
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Event> events;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await _context.Events.ToListAsync();
+        // var countEvent = events.Count();
+    }
+}
